@@ -3,25 +3,23 @@
     {
       "src": "web_scraping/wsgi.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "build_files.sh",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "staticfiles_build"
+      }
     }
   ],
   "routes": [
     {
       "src": "/static/(.*)",
-      "dest": "staticfiles_build/$1"
+      "dest": "/static/$1"
     },
     {
       "src": "/(.*)",
       "dest": "web_scraping/wsgi.py"
     }
-  ],
-  "env": {
-    "DJANGO_SETTINGS_MODULE": "web_scraping.settings"
-  },
-  "functions": {
-    "api/**/*.py": {
-      "runtime": "@vercel/python"
-    }
-  },
-  "version": 2
+  ]
 }
