@@ -52,10 +52,6 @@ SECRET_KEY = env("SECRET_KEY")
 
 DEBUG = env("DEBUG")
 
-if DEBUG:
-    STATICFILES_DIRS = [str(PROJECT_PACKAGE.joinpath("static"))]
-    STATIC_URL = "/static/"
-
 # SECURITY WARNING: App Engine's security features ensure that it is safe to
 # have ALLOWED_HOSTS = ['*'] when the app is deployed. If you deploy a Django
 # app not on App Engine, make sure to set an appropriate host here.
