@@ -28,21 +28,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(DEBUG=(bool, False))
 env_file = os.path.join(BASE_DIR, ".env")
 
-# if os.environ.get("GOOGLE_CLOUD_PROJECT", None):
-#     # Pull secrets from Secret Manager
-#     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-
-#     client = secretmanager.SecretManagerServiceClient()
-#     settings_name = os.environ.get("SETTINGS_NAME", "web_scraping_app")
-#     name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
-#     payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
-
-#     env.read_env(io.StringIO(payload))
-# elif os.path.isfile(env_file):
-    # Use a local secret file, if provided
 env.read_env(env_file)
-# else:
-    # raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -163,10 +150,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-# STATICFILES_DIRS = [str(PROJECT_PACKAGE.joinpath("static"))]
 STATIC_URL = "/static/"
+STATICFILES_DIRS = [str(PROJECT_PACKAGE.joinpath("static"))]
 
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
 
 # Default primary key field type
@@ -180,17 +166,6 @@ ACCOUNT_ACTIVATION_DAYS = 7
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-
-# if os.getenv("GOOGLE_CLOUD_PROJECT"):
-#     DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-#     STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-#     GS_BUCKET_NAME = os.environ.get("GS_BUCKET_NAME")
-#     GS_DEFAULT_ACL = "publicRead"
-#     MEDIA_URL = f"https://storage.googleapis.com/{os.environ.get('GS_BUCKET_NAME')}/"
-# else:
-#     # Serve static and media files locally during development
-# STATICFILES_DIRS = [str(PROJECT_PACKAGE.joinpath("static"))]
-# STATIC_URL = "/static/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
@@ -198,9 +173,3 @@ MEDIA_URL = "/media/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# Media root directory
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# URL prefix for media files
-MEDIA_URL = '/media/'
