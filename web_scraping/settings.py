@@ -15,10 +15,6 @@ import os
 from pathlib import Path
 
 import environ
-from django.conf import global_settings
-from google.cloud import secretmanager
-
-from google.oauth2 import service_account
 
 PROJECT_PACKAGE = Path(__file__).resolve().parent
 
@@ -27,22 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(DEBUG=(bool, False))
 env_file = os.path.join(BASE_DIR, ".env")
-
-if os.environ.get("GOOGLE_CLOUD_PROJECT", None):
-    # Pull secrets from Secret Manager
-    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-
-    client = secretmanager.SecretManagerServiceClient()
-    settings_name = os.environ.get("SETTINGS_NAME", "web_scraping_app")
-    name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
-    payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
-
-    env.read_env(io.StringIO(payload))
-elif os.path.isfile(env_file):
-    # Use a local secret file, if provided
-    env.read_env(env_file)
-else:
-    raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
+env.read_env(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -59,7 +40,8 @@ if DEBUG:
 # SECURITY WARNING: App Engine's security features ensure that it is safe to
 # have ALLOWED_HOSTS = ['*'] when the app is deployed. If you deploy a Django
 # app not on App Engine, make sure to set an appropriate host here.
-ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ['.vercel.app', '.now.sh']
 
 
 # Application definition
@@ -73,7 +55,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django_extensions',
     'data',
-    'legislative',
+    'users',
+    'crispy_forms',
+    "crispy_bootstrap4",
+    'admin_argon',
+    "verify_email.apps.VerifyEmailConfig",
+
 ]
 
 MIDDLEWARE = [
@@ -111,6 +98,38 @@ WSGI_APPLICATION = "web_scraping.wsgi.application"
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {"default": env.db()}
+# Parse database connection from DATABASE_URL environment variable
+# DATABASES = {'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))}
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': os.environ.get('DB_NAME'),
+#         'USER': os.environ.get('DB_USER'),
+#         'PASSWORD': os.environ.get('DB_PASSWORD'),
+#         'HOST': os.environ.get('DB_HOST'),
+#         'PORT': os.environ.get('DB_PORT', '5432'),
+#     },
+#     'OPTIONS': {
+#             'sslmode': os.environ.get('DB_SSLMODE', 'require'),
+#         },
+# }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('DB_DATABASE'),
+#         'USER': os.environ.get('DB_USER'),
+#         'PASSWORD': os.environ.get('DB_PASSWORD'),
+#         'HOST': os.environ.get('DB_HOST'),
+#         'PORT': os.environ.get('DB_PORT', '5432'),
+#         'OPTIONS': {
+#             'sslmode': 'require',
+#         },
+#     }
+# }
+
 
 # DATABASES = {
 #     'default': {
@@ -143,6 +162,29 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',  # Set the level to the desired one, e.g., 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
+    },
+    'loggers': {
+        'your_app_name': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -160,8 +202,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATICFILES_DIRS = [str(PROJECT_PACKAGE.joinpath("static"))]
-STATIC_URL = "/static/"
+# STATICFILES_DIRS = [str(PROJECT_PACKAGE.joinpath("static"))]
+# STATIC_URL = "/static/"
+
+STATICFILES_DIRS = os.path.join(BASE_DIR, 'static'),
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -171,22 +216,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Django-Registration
 ACCOUNT_ACTIVATION_DAYS = 7
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-CRISPY_TEMPLATE_PACK = "bootstrap5"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
+CRISPY_TEMPLATE_PACK = "bootstrap4"
 
-
-if os.getenv("GOOGLE_CLOUD_PROJECT"):
-    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-    STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-    GS_BUCKET_NAME = os.environ.get("GS_BUCKET_NAME")
-    GS_DEFAULT_ACL = "publicRead"
-    MEDIA_URL = f"https://storage.googleapis.com/{os.environ.get('GS_BUCKET_NAME')}/"
-else:
-    # Serve static and media files locally during development
-    STATICFILES_DIRS = [str(PROJECT_PACKAGE.joinpath("static"))]
-    STATIC_URL = "/static/"
-    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-    MEDIA_URL = "/media/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -198,3 +230,37 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # URL prefix for media files
 MEDIA_URL = '/media/'
+
+# login_page = "login"
+
+LOGIN_URL = "/login/"
+
+LOGIN_REDIRECT_URL = "/"
+
+# Email
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST='localhost'
+# EMAIL_PORT=1025
+# EMAIL_HOST_USER=""
+# EMAIL_HOST_PASSWORD=""
+# EMAIL_USE_TLS=False
+
+# E-mail
+
+EMAIL_HOST='smtp.sendgrid.net'
+EMAIL_PORT=587
+EMAIL_HOST_USER='apikey'
+EMAIL_HOST_PASSWORD='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'
+DEFAULT_FROM_EMAIL='abdulwassay.cosmic@gmail.com'
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = os.environ.get("EMAIL_HOST")
+# EMAIL_PORT = os.environ.get("EMAIL_PORT")
+# EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+# EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+# EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS") == "True"
+# DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
+
+# ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+
+EMAIL_FIELD_NAME = 'email'
