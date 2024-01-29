@@ -49,10 +49,10 @@ class Hierarchy(models.Model):
 
 class Data(models.Model):
     member = models.ForeignKey(Members, on_delete=models.CASCADE, null=True, blank=True)
-    committee = models.ForeignKey(Committees, on_delete=models.CASCADE, null=True, blank=True)
-    subcommittee = models.ForeignKey(SubCommittees, on_delete=models.CASCADE, null=True, blank=True)
-    title = models.ForeignKey(Title, on_delete=models.CASCADE, null=True, blank=True)
-    hierarchy = models.ForeignKey(Hierarchy, on_delete=models.CASCADE, null=True, blank=True)
+    committee = models.ForeignKey(Committees, on_delete=models.SET_NULL, null=True, blank=True)
+    subcommittee = models.ForeignKey(SubCommittees, on_delete=models.SET_NULL, null=True, blank=True)
+    title = models.ForeignKey(Title, on_delete=models.SET_NULL, null=True, blank=True)
+    hierarchy = models.ForeignKey(Hierarchy, on_delete=models.SET_NULL, null=True, blank=True)
 
 
 # class Data(models.Model):
